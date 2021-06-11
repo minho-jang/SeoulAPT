@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.eleveneleven.seoulapt.model.dao.MemberDao">
+
+	<select id="login" parameterType="member" resultType="member">
+		select userid, userpwd, name, email, address
+		from member
+		where userid = #{userid} and userpwd = #{userpwd}
+	</select>
+	
+	<insert id="registerMemeber">
+		insert into member
+		values (null, #{userid}, #{userpwd}, #{name}, #{email}, #{address})
+	</insert>
+	
+	<update id="modifyMember">
+		update member
+		set userpwd=#{userpwd}, name=#{name}, email=#{email}, address=#{address}
+		where userid=#{userid}
+	</update>
+	
+	<delete id="deleteMember">
+		delete from member
+		where userid=#{userid}
+	</delete>
+	
+	<insert id="insertHistory" parameterType="hashMap">
+		INSERT INTO history (historyid, userid, sido, gugun) 
+		values (null, #{userid}, '서울특별시', #{gugun});
+	</insert>
+
+	<select id="selectHistories" resultType="history">
+		SELECT resort.historyid, resort.userid, resort.sido, resort.gugun 
+		FROM ( 	SELECT h.historyid, h.userid, h.sido, h.gugun 
+				FROM history h
+				WHERE userid=#{userid}
+		        ORDER BY h.historyid DESC
+		        LIMIT 18446744073709551615 ) as resort
+		GROUP BY gugun
+		LIMIT 5;
+	</select>
+	
+	<delete id="deleteHistory">
+		delete 
+		from history 
+		where gugun = (	select gugunName
+			            from
+			              (select h.gugun gugunName
+			               from history h
+			               where h.historyid=#{historyid} ) as tmp ) ;
+	</delete>
+	
+</mapper>

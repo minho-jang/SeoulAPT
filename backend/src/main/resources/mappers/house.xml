@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eleveneleven.seoulapt.model.dao.HouseDao">
+
+	<select id="selectDeals" resultType="houseDeal">
+		select * 
+		from ( 	select * 
+				from housedeal h
+				where h.gugunCode = (	SELECT DISTINCT SUBSTR(dongcode, 1, 5) 
+										FROM dongcode	 
+										WHERE gugun=#{gugun}	)
+				order by h.aptName,
+				CAST(h.dealYear AS UNSIGNED) desc,
+				CAST(h.dealMonth AS UNSIGNED) desc,
+				CAST(h.dealDay AS UNSIGNED) desc
+				LIMIT 18446744073709551615 ) AS resort
+		group by resort.aptName
+		order by (CASE
+		WHEN ASCII(SUBSTRING(resort.aptName,1)) BETWEEN 48 AND 57 THEN 3 
+		WHEN ASCII(SUBSTRING(resort.aptName,1)) &lt; 128 THEN 2 ELSE 1 END), resort.aptName
+	</select>
+		
+	<select id="selectApts" parameterType="map" resultType="houseDeal">
+		select *
+		from housedeal
+		where gugunCode = (	SELECT DISTINCT SUBSTR(dongcode, 1, 5) 
+							FROM dongcode	 
+							WHERE gugun=#{gugun}	) AND dong = #{dong} AND aptName = #{aptName}
+		order by
+		CAST(dealYear AS UNSIGNED) desc,
+		CAST(dealMonth AS UNSIGNED) desc,
+		CAST(dealDay AS UNSIGNED) desc
+	</select>	
+
+	<insert id="insertQuestion">
+		INSERT INTO qnaboard
+		(qnaboardid, userid, qnatitle, qnacontent, qna_timestamp)
+		VALUES (null, #{userid}, #{qnatitle}, #{qnacontent}, now());
+	</insert>
+	<insert id="insertComment">
+		INSERT INTO qnacomment
+		(qnacommentid, userid, qnaboardid, content, comment_timestamp)
+		VALUES (null, #{userid}, #{qnaboardid}, #{content}, now());
+	</insert>
+
+	<select id="selectQna" resultType="qna">
+		SELECT qnaboardid, userid, qnatitle, qnacontent, qna_timestamp 
+		FROM qnaboard 
+		ORDER BY qnaboardid DESC;
+	</select>
+	<select id="selectComments" resultType="comment">
+		SELECT qnacommentid, userid, qnaboardid, content, comment_timestamp 
+		FROM qnacomment 
+		WHERE qnaboardid = #{qnaboardid}
+		ORDER BY qnacommentid DESC;
+	</select>
+
+	<update id="updateQuestion">
+		UPDATE qnaboard
+		SET qnatitle = #{qnatitle}, qnacontent = #{qnacontent}
+		WHERE qnaboardid = #{qnaboardid};
+	</update>
+	<update id="updateComment">
+		UPDATE qnacomment
+		SET content = #{content}
+		WHERE qnacommentid = #{qnacommentid};
+	</update>
+
+	<delete id="deleteQuestion">
+		DELETE FROM qnaboard
+		WHERE qnaboardid = #{qnaboardid}
+	</delete>
+	<delete id="deleteComment">
+		DELETE FROM qnacomment
+		WHERE qnacommentid = #{qnacommentid}
+	</delete>
+	
+	<select id="selectOneQuestion" resultType="qna">
+		SELECT qnaboardid, userid, qnatitle, qnacontent, qna_timestamp
+		FROM qnaboard
+		WHERE qnaboardid = #{qnaboardid}
+	</select>
+
+	<select id="satisticsOfGugunByPrice" resultType="map"> 
+		select r.dealAmount, IF((r.aptName = #{aptName} AND r.dong=#{dong}),'T','F') as 'check' 
+		from ( 	select h.dong, h.aptName, replace(h.dealAmount, ',','') as dealAmount
+				from housedeal h
+				where h.gugunCode = (	SELECT DISTINCT SUBSTR(dongcode, 1, 5) 
+										FROM dongcode	 
+										WHERE gugun=#{gugun}	)
+				order by h.aptName,
+				CAST(h.dealYear AS UNSIGNED) desc,
+				CAST(h.dealMonth AS UNSIGNED) desc,
+				CAST(h.dealDay AS UNSIGNED) desc
+				LIMIT 18446744073709551615 ) AS r
+		group by r.aptName
+		order by cast(r.dealAmount as unsigned);
+	</select>
+	
+	<select id="satisticsOfGugunByArea" resultType="map">
+		select r.area, IF((r.aptName = #{aptName} AND r.dong=#{dong}),'T','F') as 'check' 
+		from ( 	select h.dong, h.aptName, h.area
+				from housedeal h
+				where h.gugunCode = (	SELECT DISTINCT SUBSTR(dongcode, 1, 5) 
+										FROM dongcode	 
+										WHERE gugun=#{gugun}	)
+				order by h.aptName,
+				CAST(h.dealYear AS UNSIGNED) desc,
+				CAST(h.dealMonth AS UNSIGNED) desc,
+				CAST(h.dealDay AS UNSIGNED) desc
+				LIMIT 18446744073709551615 ) AS r
+		group by r.aptName
+		order by cast(r.area as unsigned);
+	</select>
+	
+	<select id="satisticsOfAptByPrice" resultType="map">
+		SELECT replace(dealAmount, ',','') as dealAmount, dealYear, dealMonth, dealDay 
+		FROM housedeal 
+		WHERE gugunCode=(SELECT DISTINCT SUBSTR(dongcode, 1, 5) FROM dongcode WHERE gugun=#{gugun}) AND aptName=#{aptName} AND dong=#{dong}
+		ORDER BY 
+			CAST(dealYear AS UNSIGNED) ASC,
+			CAST(dealMonth AS UNSIGNED) ASC,
+			CAST(dealDay AS UNSIGNED) ASC;
+	</select>
+
+</mapper>
+
+
+
+
+
+
+
