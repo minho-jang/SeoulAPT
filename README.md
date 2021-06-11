@@ -21,6 +21,8 @@
 
 ## Team
 
+### eleven-eleven
+
 - 권영린 (backend)
   - SpringBoot
   - MySQL
